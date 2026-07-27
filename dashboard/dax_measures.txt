@@ -1,0 +1,86 @@
+// ============================================================================
+// DAX Measures Library for Customer Churn & LTV Power BI Dashboard
+// Project: Customer Churn Prediction & Customer Lifetime Value (LTV) Engine
+// ============================================================================
+
+// 1. Total Customer Count
+Total Customers = 
+COUNTROWS(cleaned_churn_data)
+
+// 2. Churned Customers Count
+Churned Customers Count = 
+CALCULATE(
+    COUNTROWS(cleaned_churn_data),
+    cleaned_churn_data[Churn] = "Yes"
+)
+
+// 3. Active Customers Count
+Active Customers Count = 
+CALCULATE(
+    COUNTROWS(cleaned_churn_data),
+    cleaned_churn_data[Churn] = "No"
+)
+
+// 4. Overall Churn Rate (%)
+Churn Rate % = 
+DIVIDE(
+    [Churned Customers Count],
+    [Total Customers],
+    0
+) * 100
+
+// 5. Total Monthly Recurring Revenue (MRR)
+Total MRR = 
+SUM(cleaned_churn_data[MonthlyCharges])
+
+// 6. At-Risk Monthly Recurring Revenue (Churned MRR)
+At Risk MRR = 
+CALCULATE(
+    SUM(cleaned_churn_data[MonthlyCharges]),
+    cleaned_churn_data[Churn] = "Yes"
+)
+
+// 7. Percentage of MRR Lost
+MRR Loss % = 
+DIVIDE(
+    [At Risk MRR],
+    [Total MRR],
+    0
+) * 100
+
+// 8. Average Tenure (Months)
+Avg Tenure Months = 
+AVERAGE(cleaned_churn_data[tenure])
+
+// 9. Average Monthly Charges ($)
+Avg Monthly Charge = 
+AVERAGE(cleaned_churn_data[MonthlyCharges])
+
+// 10. Baseline Historical Customer Lifetime Value (LTV)
+Historical LTV = 
+SUMX(
+    cleaned_churn_data,
+    cleaned_churn_data[MonthlyCharges] * cleaned_churn_data[tenure]
+)
+
+// 11. Average LTV per Customer
+Avg Customer LTV = 
+AVERAGEX(
+    cleaned_churn_data,
+    cleaned_churn_data[MonthlyCharges] * cleaned_churn_data[tenure]
+)
+
+// 12. Fiber Optic Churn Rate (%)
+Fiber Optic Churn Rate % = 
+CALCULATE(
+    [Churn Rate %],
+    cleaned_churn_data[InternetService] = "Fiber optic"
+)
+
+// 13. Month-to-Month Churn Share (%)
+M2M Churn Share % = 
+DIVIDE(
+    CALCULATE([Churned Customers Count], cleaned_churn_data[Contract] = "Month-to-month"),
+    [Churned Customers Count],
+    0
+) * 100

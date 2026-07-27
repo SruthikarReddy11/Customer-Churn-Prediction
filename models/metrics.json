@@ -1,0 +1,74 @@
+{
+    "Logistic Regression": {
+        "Accuracy": 0.8034,
+        "Precision": 0.6644,
+        "Recall": 0.5241,
+        "F1 Score": 0.5859,
+        "ROC-AUC": 0.846,
+        "Confusion Matrix": [
+            [
+                936,
+                99
+            ],
+            [
+                178,
+                196
+            ]
+        ]
+    },
+    "Decision Tree": {
+        "Accuracy": 0.7942,
+        "Precision": 0.6438,
+        "Recall": 0.5027,
+        "F1 Score": 0.5646,
+        "ROC-AUC": 0.8278,
+        "Confusion Matrix": [
+            [
+                931,
+                104
+            ],
+            [
+                186,
+                188
+            ]
+        ]
+    },
+    "Random Forest": {
+        "Accuracy": 0.8034,
+        "Precision": 0.6667,
+        "Recall": 0.5187,
+        "F1 Score": 0.5835,
+        "ROC-AUC": 0.8442,
+        "Confusion Matrix": [
+            [
+                938,
+                97
+            ],
+            [
+                180,
+                194
+            ]
+        ]
+    },
+    "XGBoost": {
+        "Accuracy": 0.7984,
+        "Precision": 0.6471,
+        "Recall": 0.5294,
+        "F1 Score": 0.5824,
+        "ROC-AUC": 0.8437,
+        "Confusion Matrix": [
+            [
+                927,
+                108
+            ],
+            [
+                176,
+                198
+            ]
+        ]
+    },
+    "LTV Regressor (XGBoost)": {
+        "RMSE": 54.2,
+        "R2 Score": 0.9994
+    }
+}

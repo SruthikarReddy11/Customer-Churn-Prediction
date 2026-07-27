@@ -15,23 +15,14 @@ venv/
 
 # Logs
 *.log
+reports/logs/
 
 # OS Files
 .DS_Store
 Thumbs.db
 
-# PostgreSQL backups
-*.sql.bak
-
-# Model Files
-*.pkl
-*.joblib
-
-# Power BI temporary files
-*.tmp
-
-# Environment Variables
-.env
+# Pytest
+.pytest_cache/
 
 # Python Distribution
 build/
