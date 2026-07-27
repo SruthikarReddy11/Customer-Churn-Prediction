@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Churn & LTV Executive Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- App Container -->
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <i class="fa-solid fa-chart-line brand-icon"></i>
+                <div class="brand-text">
+                    <h2>RetainPulse</h2>
+                    <span>Churn & LTV Engine</span>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="#overview" class="nav-item active">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Executive Overview</span>
+                </a>
+                <a href="#analytics" class="nav-item">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Risk Driver Analytics</span>
+                </a>
+                <a href="#calculator" class="nav-item">
+                    <i class="fa-solid fa-calculator"></i>
+                    <span>Live Churn & LTV Simulator</span>
+                </a>
+                <a href="#table-section" class="nav-item">
+                    <i class="fa-solid fa-users"></i>
+                    <span>At-Risk Customer List</span>
+                </a>
+            </nav>
+
+            <div class="system-status">
+                <div class="status-indicator online"></div>
+                <div class="status-info">
+                    <span class="status-title">FastAPI Backend Engine</span>
+                    <span class="status-desc" id="api-status-text">Connected (v1.0.0)</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header Bar -->
+            <header class="top-header">
+                <div class="header-title">
+                    <h1>Customer Churn & Customer Lifetime Value (LTV) Engine</h1>
+                    <p>Real-time predictive analytics, cohort hazard rates, and revenue impact intelligence.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="resetFilters()">
+                        <i class="fa-solid fa-rotate-left"></i> Reset Filters
+                    </button>
+                    <button class="btn btn-primary" onclick="scrollToCalculator()">
+                        <i class="fa-solid fa-bolt"></i> Run Prediction
+                    </button>
+                </div>
+            </header>
+
+            <!-- Filters Bar -->
+            <section class="filter-section">
+                <div class="filter-header">
+                    <i class="fa-solid fa-filter"></i>
+                    <span>Global Controls</span>
+                </div>
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label for="filter-contract">Contract Type</label>
+                        <select id="filter-contract" onchange="applyFilters()">
+                            <option value="All">All Contracts</option>
+                            <option value="Month-to-month">Month-to-month</option>
+                            <option value="One year">One year</option>
+                            <option value="Two year">Two year</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="filter-payment">Payment Method</label>
+                        <select id="filter-payment" onchange="applyFilters()">
+                            <option value="All">All Payment Methods</option>
+                            <option value="Electronic check">Electronic check</option>
+                            <option value="Mailed check">Mailed check</option>
+                            <option value="Bank transfer (automatic)">Bank transfer (auto)</option>
+                            <option value="Credit card (automatic)">Credit card (auto)</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="filter-internet">Internet Service</label>
+                        <select id="filter-internet" onchange="applyFilters()">
+                            <option value="All">All Internet Types</option>
+                            <option value="Fiber optic">Fiber Optic</option>
+                            <option value="DSL">DSL</option>
+                            <option value="No">No Internet</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="filter-risk">Risk Tier</label>
+                        <select id="filter-risk" onchange="applyFilters()">
+                            <option value="All">All Risk Tiers</option>
+                            <option value="High Risk">High Risk (>70%)</option>
+                            <option value="Medium Risk">Medium Risk (40-70%)</option>
+                            <option value="Low Risk">Low Risk (<40%)</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Executive KPI Cards Grid -->
+            <section class="kpi-grid" id="overview">
+                <div class="kpi-card glass">
+                    <div class="kpi-icon blue">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Total Active Customers</span>
+                        <h3 class="kpi-value" id="kpi-total-customers">7,043</h3>
+                        <span class="kpi-subtext positive"><i class="fa-solid fa-database"></i> IBM Telco Dataset</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card glass">
+                    <div class="kpi-icon red">
+                        <i class="fa-solid fa-user-minus"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Baseline Churn Rate</span>
+                        <h3 class="kpi-value" id="kpi-churn-rate">26.54%</h3>
+                        <span class="kpi-subtext negative"><i class="fa-solid fa-arrow-trend-up"></i> 1,869 Defected Users</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card glass">
+                    <div class="kpi-icon emerald">
+                        <i class="fa-solid fa-dollar-sign"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Total Monthly MRR</span>
+                        <h3 class="kpi-value" id="kpi-total-mrr">$456.1K</h3>
+                        <span class="kpi-subtext neutral"><i class="fa-solid fa-receipt"></i> Monthly Recurring Rev</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card glass">
+                    <div class="kpi-icon amber">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">At-Risk MRR (Churned)</span>
+                        <h3 class="kpi-value" id="kpi-at-risk-mrr">$139.1K</h3>
+                        <span class="kpi-subtext negative"><i class="fa-solid fa-circle-exclamation"></i> 30.5% Total Revenue</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card glass">
+                    <div class="kpi-icon purple">
+                        <i class="fa-solid fa-vault"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Average Customer LTV</span>
+                        <h3 class="kpi-value" id="kpi-avg-ltv">$2,280</h3>
+                        <span class="kpi-subtext positive"><i class="fa-solid fa-chart-line"></i> Historical Baseline LTV</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts Section 1 -->
+            <section class="charts-grid" id="analytics">
+                <div class="chart-card glass">
+                    <div class="chart-header">
+                        <div>
+                            <h3 class="chart-title">Churn Rate (%) by Contract Type</h3>
+                            <p class="chart-subtitle">Comparison of Month-to-Month vs 1-Year vs 2-Year churn exposure.</p>
+                        </div>
+                        <i class="fa-solid fa-file-contract chart-icon"></i>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="chartContractChurn"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card glass">
+                    <div class="chart-header">
+                        <div>
+                            <h3 class="chart-title">Payment Method Friction & Churn Rate</h3>
+                            <p class="chart-subtitle">Evaluating manual check friction vs automated billing protection.</p>
+                        </div>
+                        <i class="fa-solid fa-credit-card chart-icon"></i>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="chartPaymentFriction"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Charts Section 2 -->
+            <section class="charts-grid">
+                <div class="chart-card glass">
+                    <div class="chart-header">
+                        <div>
+                            <h3 class="chart-title">Tenure Lifecycle Hazard Curve</h3>
+                            <p class="chart-subtitle">Early onboarding vulnerability (0-12m) vs long-term customer protection.</p>
+                        </div>
+                        <i class="fa-solid fa-user-clock chart-icon"></i>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="chartTenureHazard"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card glass">
+                    <div class="chart-header">
+                        <div>
+                            <h3 class="chart-title">Internet Technology & Tech Support Risk</h3>
+                            <p class="chart-subtitle">Fiber Optic pricing friction mitigation via Tech Support add-ons.</p>
+                        </div>
+                        <i class="fa-solid fa-wifi chart-icon"></i>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="chartTechSupportRisk"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Live Prediction & LTV Simulator -->
+            <section class="calculator-section glass" id="calculator">
+                <div class="section-title-box">
+                    <div>
+                        <h2><i class="fa-solid fa-microchip glow-icon"></i> Live Churn Risk & Customer LTV Predictor</h2>
+                        <p>Simulate real-time scoring using our trained XGBoost / Logistic Regression ML Models and FastAPI backend.</p>
+                    </div>
+                    <span class="badge badge-primary"><i class="fa-solid fa-bolt"></i> Real-Time Inference</span>
+                </div>
+
+                <div class="calculator-layout">
+                    <!-- Form Input Controls -->
+                    <form id="churn-form" class="calc-form" onsubmit="handleFormSubmit(event)">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="input-customer-id">Customer ID</label>
+                                <input type="text" id="input-customer-id" value="7590-VHVEG" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="input-tenure">Tenure (Months)</label>
+                                <input type="number" id="input-tenure" min="0" max="72" value="2" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="input-monthly-charges">Monthly Charges ($)</label>
+                                <input type="number" id="input-monthly-charges" step="0.01" value="70.70" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="input-contract">Contract Duration</label>
+                                <select id="input-contract">
+                                    <option value="Month-to-month" selected>Month-to-month</option>
+                                    <option value="One year">One year</option>
+                                    <option value="Two year">Two year</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="input-internet">Internet Service</label>
+                                <select id="input-internet">
+                                    <option value="Fiber optic" selected>Fiber optic</option>
+                                    <option value="DSL">DSL</option>
+                                    <option value="No">No Internet</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="input-tech-support">Tech Support Add-on</label>
+                                <select id="input-tech-support">
+                                    <option value="No" selected>No</option>
+                                    <option value="Yes">Yes</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="input-payment">Payment Method</label>
+                                <select id="input-payment">
+                                    <option value="Electronic check" selected>Electronic check</option>
+                                    <option value="Mailed check">Mailed check</option>
+                                    <option value="Bank transfer (automatic)">Bank transfer (auto)</option>
+                                    <option value="Credit card (automatic)">Credit card (auto)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="input-paperless">Paperless Billing</label>
+                                <select id="input-paperless">
+                                    <option value="Yes" selected>Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fa-solid fa-play"></i> Compute Churn Probability & LTV
+                        </button>
+                    </form>
+
+                    <!-- Results Panel -->
+                    <div class="calc-results" id="calc-results-box">
+                        <div class="result-header">
+                            <span class="result-subtitle">ML Prediction Result</span>
+                            <div class="risk-badge high" id="res-risk-badge">High Risk</div>
+                        </div>
+
+                        <div class="gauge-container">
+                            <div class="prob-circle">
+                                <span class="prob-number" id="res-prob-pct">68.4%</span>
+                                <span class="prob-label">Churn Probability</span>
+                            </div>
+                        </div>
+
+                        <div class="metrics-row">
+                            <div class="mini-metric">
+                                <span class="mm-label">Historical LTV</span>
+                                <span class="mm-val" id="res-historical-ltv">$141.40</span>
+                            </div>
+                            <div class="mini-metric">
+                                <span class="mm-label">Predicted LTV</span>
+                                <span class="mm-val highlight" id="res-predicted-ltv">$1,131.20</span>
+                            </div>
+                            <div class="mini-metric">
+                                <span class="mm-label">Remaining Lifespan</span>
+                                <span class="mm-val" id="res-remaining-months">14 Months</span>
+                            </div>
+                        </div>
+
+                        <div class="drivers-box">
+                            <h4><i class="fa-solid fa-circle-nodes"></i> Detected Risk Drivers</h4>
+                            <ul id="res-drivers-list">
+                                <li>Month-to-Month Contract Status (High Vulnerability)</li>
+                                <li>Early Lifecycle Tenure (<= 12 Months)</li>
+                                <li>Fiber Optic without Technical Support Add-on</li>
+                            </ul>
+                        </div>
+
+                        <div class="recommendation-box">
+                            <h4><i class="fa-solid fa-lightbulb"></i> Recommended Action</h4>
+                            <p id="res-recommendation-text">Offer a 15% annual discount to switch to a 1-Year contract + complimentary Tech Support.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- At-Risk Customers Table -->
+            <section class="table-card glass" id="table-section">
+                <div class="table-header">
+                    <div>
+                        <h3 class="chart-title">High-Value At-Risk Customers (Priority CRM List)</h3>
+                        <p class="chart-subtitle">Real-time target list of month-to-month customers with high accumulated LTV.</p>
+                    </div>
+                    <div class="table-search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="table-search-input" placeholder="Search Customer ID or Contract..." onkeyup="searchTable()">
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Customer ID</th>
+                                <th>Tenure</th>
+                                <th>Contract</th>
+                                <th>Internet Service</th>
+                                <th>Payment Method</th>
+                                <th>Monthly Charge</th>
+                                <th>Historical LTV</th>
+                                <th>Churn Status</th>
+                                <th>Risk Score</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="at-risk-table-body">
+                            <!-- Populated dynamically via app.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Application Script -->
+    <script src="app.js"></script>
+</body>
+</html>

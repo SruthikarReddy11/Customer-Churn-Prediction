@@ -2,14 +2,15 @@
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.95%2B-009688?logo=fastapi)
+![HTML5/CSS3/JS](https://img.shields.io/badge/Web%20Dashboard-HTML5%2FCSS3%2FJS-E34F26?logo=html5)
+![Chart.js](https://img.shields.io/badge/Chart.js-Visualization-FF6384?logo=chartdotjs)
 ![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-1.2%2B-F7931E?logo=scikit-learn)
 ![XGBoost](https://img.shields.io/badge/XGBoost-1.7%2B-2A52BE)
 ![SHAP](https://img.shields.io/badge/SHAP-Explainability-brightgreen)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql)
-![PowerBI](https://img.shields.io/badge/PowerBI-Dashboard-F2C811?logo=powerbi)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-An enterprise-grade, production-ready Machine Learning and Business Intelligence platform built on the **IBM Telco Customer Churn** dataset. This system delivers real-time churn risk scoring, customer lifetime value (LTV) prediction, model explainability via SHAP, a FastAPI backend microservice, and an executive Power BI dashboard.
+An enterprise-grade, production-ready Machine Learning and Business Intelligence platform built on the **IBM Telco Customer Churn** dataset. This system delivers real-time churn risk scoring, customer lifetime value (LTV) prediction, model explainability via SHAP, a FastAPI backend microservice, and an interactive HTML5/CSS3/JS executive web dashboard.
 
 ---
 
@@ -22,6 +23,7 @@ Customer acquisition in telecommunications costs **5x to 25x** more than custome
 2. **Quantify Financial Leakage**: Estimate Monthly Recurring Revenue (MRR) at risk and compute Customer Lifetime Value (LTV).
 3. **Explain Driver Attribution**: Provide interpretable SHAP feature contributions for personalized retention offers.
 4. **Deploy Real-Time Microservice**: Expose scalable FastAPI REST endpoints for CRM integration.
+5. **Interactive Executive Web Dashboard**: Provide real-time data visual analytics, multi-filtering, and live risk scoring via HTML/CSS/JS.
 
 ---
 
@@ -30,12 +32,12 @@ Customer acquisition in telecommunications costs **5x to 25x** more than custome
 | Domain | Technologies |
 | :--- | :--- |
 | **Core Language** | Python 3.10+ |
+| **Front-End Dashboard** | HTML5, Vanilla CSS3 (Dark Glassmorphism UI), JavaScript (ES6+), Chart.js |
 | **Data Processing & EDA** | Pandas, NumPy, Matplotlib, Seaborn |
 | **Machine Learning** | Scikit-Learn, XGBoost |
 | **Model Explainability** | SHAP (SHapley Additive exPlanations) |
 | **Database & SQL** | MySQL 8.0 DDL/DML, Relational Schema |
 | **Backend Framework** | FastAPI, Uvicorn, Pydantic V2 |
-| **Business Intelligence** | Power BI Desktop, DAX |
 | **Testing & Tooling** | Pytest, Git, Jupyter Notebook |
 
 ---
@@ -46,8 +48,10 @@ Customer acquisition in telecommunications costs **5x to 25x** more than custome
 Customer_Churn/
 │
 ├── dashboard/
-│   ├── PowerBI_Dashboard_Guide.md     # Complete Power BI setup & visual layout blueprint
-│   └── dax_measures.txt               # Production DAX measure formula library
+│   ├── index.html                     # Main HTML5 Executive Dashboard application
+│   ├── styles.css                     # Dark glassmorphism CSS design system
+│   ├── app.js                         # JavaScript logic (Chart.js, filters, API client)
+│   └── Web_Dashboard_Guide.md         # Front-end architecture & setup guide
 ├── data_raw/
 │   └── WA_Fn-UseC_-Telco-Customer-Churn.csv # IBM Telco raw dataset
 ├── data_processed/
@@ -152,60 +156,18 @@ Using SHAP (SHapley Additive exPlanations):
 Verifies service availability and model status.
 
 #### 2. Predict Churn Risk (`POST /api/v1/predict-churn`)
-**Sample Request Payload**:
-```json
-{
-  "customer_id": "9237-HQITU",
-  "gender": "Female",
-  "SeniorCitizen": 0,
-  "Partner": "No",
-  "Dependents": "No",
-  "tenure": 2,
-  "PhoneService": "Yes",
-  "MultipleLines": "No",
-  "InternetService": "Fiber optic",
-  "OnlineSecurity": "No",
-  "OnlineBackup": "No",
-  "DeviceProtection": "No",
-  "TechSupport": "No",
-  "StreamingTV": "No",
-  "StreamingMovies": "No",
-  "Contract": "Month-to-month",
-  "PaperlessBilling": "Yes",
-  "PaymentMethod": "Electronic check",
-  "MonthlyCharges": 70.70,
-  "TotalCharges": 151.65
-}
-```
-
-**Sample Response**:
-```json
-{
-  "customer_id": "9237-HQITU",
-  "churn_prediction": 1,
-  "churn_status": "Yes",
-  "churn_probability": 0.6842,
-  "risk_tier": "Medium Risk",
-  "top_risk_drivers": [
-    "Month-to-Month Contract Status (High Vulnerability)",
-    "Early Lifecycle Tenure (<= 12 Months)",
-    "Fiber Optic without Technical Support Add-on",
-    "Electronic Check Manual Payment Method"
-  ],
-  "retention_recommendation": "Send targeted email campaign promoting Auto-Pay and streaming add-ons."
-}
-```
-
 #### 3. Predict Customer Lifetime Value (`POST /api/v1/predict-ltv`)
-Returns baseline historical LTV, predicted LTV, and remaining customer lifespan.
+
+---
+
+### Phase 8: Interactive HTML/CSS/JS Executive Web Dashboard
+
+- Open [`dashboard/index.html`](file:///c:/Users/Sai/OneDrive/Desktop/Customer_churn/dashboard/index.html) in any browser to access the executive dashboard.
+- Features executive KPI summary cards, interactive Chart.js charts, global filter bar (Contract, Payment Method, Internet Service, Risk Tier), live prediction calculator, and searchable CRM target list.
 
 ---
 
 ## Installation & Execution Guide
-
-### Prerequisites
-- Python 3.10 or higher
-- Git
 
 ### 1. Clone Repository & Setup Virtual Environment
 ```bash
@@ -238,14 +200,12 @@ python -m pytest tests/ -v
 ```bash
 python -m uvicorn src.api.app:app --host 0.0.0.0 --port 8000 --reload
 ```
-Navigate to `http://localhost:8000/docs` to test endpoints interactively using Swagger UI.
 
----
-
-## Future Enhancements
-1. **A/B Testing Framework**: Evaluate retention intervention conversion rates in live marketing channels.
-2. **Deep Learning (TabNet)**: Experiment with attention-based tabular networks for complex feature interactions.
-3. **MLflow Model Registry**: Implement automated model versioning, tracking, and continuous deployment (CI/CD).
+### 6. Launch Web Dashboard
+Open `dashboard/index.html` in your web browser or serve via Python:
+```bash
+python -m http.server 3000 --directory dashboard
+```
 
 ---
 
