@@ -1,44 +1,24 @@
 /**
  * Customer Churn & LTV Dashboard Application Logic.
- * Manages Chart.js visual charts, global filter state, interactive CRM data table,
- * and live REST API integration with FastAPI backend.
+ * Features: Dynamic multi-filtering, reactive KPI cards, Chart.js updates,
+ * searchable CRM table, and live REST API integration with FastAPI backend.
  */
 
-// Global State
 const API_BASE_URL = "http://localhost:8000/api/v1";
 
-// Dataset Baseline Metrics
-const baseMetrics = {
-    totalCustomers: 7043,
-    churnedCustomers: 1869,
-    churnRate: 26.54,
-    totalMRR: 456116.60,
-    atRiskMRR: 139130.85,
-    avgLTV: 2280.50
-};
-
-// High-Value At-Risk Sample Dataset
-const sampleCustomers = [
-    { id: "7590-VHVEG", tenure: 1, contract: "Month-to-month", internet: "DSL", payment: "Electronic check", monthly: 29.85, ltv: 29.85, churn: "No", risk: 0.68 },
-    { id: "9237-HQITU", tenure: 2, contract: "Month-to-month", internet: "Fiber optic", payment: "Electronic check", monthly: 70.70, ltv: 141.40, churn: "Yes", risk: 0.85 },
-    { id: "9305-CDSKC", tenure: 8, contract: "Month-to-month", internet: "Fiber optic", payment: "Electronic check", monthly: 99.65, ltv: 797.20, churn: "Yes", risk: 0.82 },
-    { id: "1452-KIOVK", tenure: 22, contract: "Month-to-month", internet: "Fiber optic", payment: "Credit card (automatic)", monthly: 89.10, ltv: 1960.20, churn: "No", risk: 0.44 },
-    { id: "7892-POOKP", tenure: 28, contract: "Month-to-month", internet: "Fiber optic", payment: "Electronic check", monthly: 104.80, ltv: 2934.40, churn: "Yes", risk: 0.76 },
-    { id: "6388-TABGU", tenure: 62, contract: "One year", internet: "DSL", payment: "Bank transfer (automatic)", monthly: 56.15, ltv: 3481.30, churn: "No", risk: 0.12 },
-    { id: "9763-GRSKD", tenure: 13, contract: "Month-to-month", internet: "DSL", payment: "Mailed check", monthly: 49.95, ltv: 649.35, churn: "No", risk: 0.51 },
-    { id: "4183-MYFRB", tenure: 16, contract: "Month-to-month", internet: "Fiber optic", payment: "Electronic check", monthly: 90.05, ltv: 1440.80, churn: "No", risk: 0.73 }
-];
-
+// Active dataset reference (uses fullCustomerDataset from dataset.js or sample fallback)
+let currentDataset = (typeof fullCustomerDataset !== "undefined") ? fullCustomerDataset : [];
+let currentFilteredData = [...currentDataset];
 let charts = {};
 
-// Initialization on DOM Load
+// DOM Initialization
 document.addEventListener("DOMContentLoaded", () => {
     initCharts();
-    populateTable(sampleCustomers);
+    applyFilters();
     checkApiHealth();
 });
 
-// Check FastAPI Connection
+// Check FastAPI Health
 async function checkApiHealth() {
     const statusText = document.getElementById("api-status-text");
     try {
@@ -48,16 +28,16 @@ async function checkApiHealth() {
             statusText.innerText = `Connected (${data.version})`;
             statusText.style.color = "#10b981";
         } else {
-            statusText.innerText = "Offline (Local Fallback)";
+            statusText.innerText = "Offline (Local Engine)";
             statusText.style.color = "#f59e0b";
         }
     } catch (err) {
-        statusText.innerText = "Offline (Local Fallback)";
+        statusText.innerText = "Offline (Local Engine)";
         statusText.style.color = "#f59e0b";
     }
 }
 
-// Chart.js Setup
+// Chart.js Initialization
 function initCharts() {
     Chart.defaults.font.family = "'Inter', sans-serif";
     Chart.defaults.color = "#9ca3af";
@@ -69,7 +49,7 @@ function initCharts() {
         data: {
             labels: ["Month-to-month", "One year", "Two year"],
             datasets: [{
-                data: [42.71, 11.27, 2.83],
+                data: [0, 0, 0],
                 backgroundColor: ["#ef4444", "#f59e0b", "#10b981"],
                 borderWidth: 0,
                 hoverOffset: 6
@@ -94,7 +74,7 @@ function initCharts() {
             labels: ["Electronic check", "Mailed check", "Bank transfer", "Credit card"],
             datasets: [{
                 label: "Churn Rate (%)",
-                data: [45.29, 19.11, 16.71, 15.24],
+                data: [0, 0, 0, 0],
                 backgroundColor: ["#ef4444", "#f59e0b", "#6366f1", "#10b981"],
                 borderRadius: 6
             }]
@@ -119,7 +99,7 @@ function initCharts() {
             labels: ["0-1 Year", "1-2 Years", "2-4 Years", "4+ Years"],
             datasets: [{
                 label: "Churn Rate (%)",
-                data: [47.68, 28.57, 18.20, 9.45],
+                data: [0, 0, 0, 0],
                 borderColor: "#6366f1",
                 backgroundColor: "rgba(99, 102, 241, 0.2)",
                 fill: true,
@@ -148,13 +128,13 @@ function initCharts() {
             datasets: [
                 {
                     label: "No Tech Support",
-                    data: [49.37, 27.81],
+                    data: [0, 0],
                     backgroundColor: "#ef4444",
                     borderRadius: 6
                 },
                 {
                     label: "With Tech Support",
-                    data: [15.20, 10.45],
+                    data: [0, 0],
                     backgroundColor: "#10b981",
                     borderRadius: 6
                 }
@@ -172,10 +152,121 @@ function initCharts() {
     });
 }
 
+// Global Filter Handler
+function applyFilters() {
+    const contract = document.getElementById("filter-contract").value;
+    const payment = document.getElementById("filter-payment").value;
+    const internet = document.getElementById("filter-internet").value;
+    const risk = document.getElementById("filter-risk").value;
+
+    let filtered = [...currentDataset];
+
+    if (contract !== "All") filtered = filtered.filter(c => c.contract === contract);
+    if (payment !== "All") {
+        if (payment.includes("Bank")) filtered = filtered.filter(c => c.payment.toLowerCase().includes("bank"));
+        else if (payment.includes("Credit")) filtered = filtered.filter(c => c.payment.toLowerCase().includes("credit"));
+        else filtered = filtered.filter(c => c.payment === payment);
+    }
+    if (internet !== "All") filtered = filtered.filter(c => c.internet === internet);
+    if (risk !== "All") {
+        if (risk === "High Risk") filtered = filtered.filter(c => c.risk >= 0.70);
+        else if (risk === "Medium Risk") filtered = filtered.filter(c => c.risk >= 0.40 && c.risk < 0.70);
+        else if (risk === "Low Risk") filtered = filtered.filter(c => c.risk < 0.40);
+    }
+
+    currentFilteredData = filtered;
+
+    // Update UI Components
+    updateKpiCards(filtered);
+    updateCharts(filtered);
+    populateTable(filtered.slice(0, 25));
+}
+
+// Reset Filters
+function resetFilters() {
+    document.getElementById("filter-contract").value = "All";
+    document.getElementById("filter-payment").value = "All";
+    document.getElementById("filter-internet").value = "All";
+    document.getElementById("filter-risk").value = "All";
+    applyFilters();
+}
+
+// Update KPI Cards
+function updateKpiCards(data) {
+    const total = data.length;
+    const churned = data.filter(c => c.churn === "Yes").length;
+    const churnRate = total > 0 ? ((churned / total) * 100).toFixed(2) : "0.00";
+    
+    const totalMRR = data.reduce((acc, c) => acc + c.monthly, 0);
+    const atRiskMRR = data.filter(c => c.churn === "Yes").reduce((acc, c) => acc + c.monthly, 0);
+    const avgLTV = total > 0 ? (data.reduce((acc, c) => acc + c.ltv, 0) / total).toFixed(0) : "0";
+
+    document.getElementById("kpi-total-customers").innerText = total.toLocaleString();
+    document.getElementById("kpi-churn-rate").innerText = `${churnRate}%`;
+    document.getElementById("kpi-total-mrr").innerText = totalMRR >= 1000 ? `$${(totalMRR / 1000).toFixed(1)}K` : `$${totalMRR.toFixed(0)}`;
+    document.getElementById("kpi-at-risk-mrr").innerText = atRiskMRR >= 1000 ? `$${(atRiskMRR / 1000).toFixed(1)}K` : `$${atRiskMRR.toFixed(0)}`;
+    document.getElementById("kpi-avg-ltv").innerText = `$${Number(avgLTV).toLocaleString()}`;
+}
+
+// Update Chart.js Datasets Dynamically
+function updateCharts(data) {
+    const calcRate = (subset) => {
+        if (!subset || subset.length === 0) return 0;
+        const churned = subset.filter(c => c.churn === "Yes").length;
+        return Number(((churned / subset.length) * 100).toFixed(1));
+    };
+
+    // 1. Contract Churn
+    const m2mRate = calcRate(data.filter(c => c.contract === "Month-to-month"));
+    const yr1Rate = calcRate(data.filter(c => c.contract === "One year"));
+    const yr2Rate = calcRate(data.filter(c => c.contract === "Two year"));
+    if (charts.contract) {
+        charts.contract.data.datasets[0].data = [m2mRate, yr1Rate, yr2Rate];
+        charts.contract.update();
+    }
+
+    // 2. Payment Method Churn
+    const echeckRate = calcRate(data.filter(c => c.payment === "Electronic check"));
+    const mcheckRate = calcRate(data.filter(c => c.payment === "Mailed check"));
+    const bankRate = calcRate(data.filter(c => c.payment.toLowerCase().includes("bank")));
+    const cardRate = calcRate(data.filter(c => c.payment.toLowerCase().includes("credit")));
+    if (charts.payment) {
+        charts.payment.data.datasets[0].data = [echeckRate, mcheckRate, bankRate, cardRate];
+        charts.payment.update();
+    }
+
+    // 3. Tenure Hazard Rate
+    const t1 = calcRate(data.filter(c => c.tenure <= 12));
+    const t2 = calcRate(data.filter(c => c.tenure > 12 && c.tenure <= 24));
+    const t3 = calcRate(data.filter(c => c.tenure > 24 && c.tenure <= 48));
+    const t4 = calcRate(data.filter(c => c.tenure > 48));
+    if (charts.tenure) {
+        charts.tenure.data.datasets[0].data = [t1, t2, t3, t4];
+        charts.tenure.update();
+    }
+
+    // 4. Tech Support & Internet Technology
+    const foNoTech = calcRate(data.filter(c => c.internet === "Fiber optic" && (c.techSupport === "No")));
+    const foWithTech = calcRate(data.filter(c => c.internet === "Fiber optic" && (c.techSupport === "Yes")));
+    const dslNoTech = calcRate(data.filter(c => c.internet === "DSL" && (c.techSupport === "No")));
+    const dslWithTech = calcRate(data.filter(c => c.internet === "DSL" && (c.techSupport === "Yes")));
+    if (charts.techSupport) {
+        charts.techSupport.data.datasets[0].data = [foNoTech, dslNoTech];
+        charts.techSupport.data.datasets[1].data = [foWithTech, dslWithTech];
+        charts.techSupport.update();
+    }
+}
+
 // Populate At-Risk Customer Data Table
 function populateTable(data) {
     const tbody = document.getElementById("at-risk-table-body");
+    if (!tbody) return;
     tbody.innerHTML = "";
+
+    if (data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding: 20px; color:#9ca3af;">No matching customers found. Try relaxing your filter selection.</td></tr>`;
+        return;
+    }
 
     data.forEach(item => {
         const tr = document.createElement("tr");
@@ -204,20 +295,21 @@ function populateTable(data) {
     });
 }
 
-// Search Table
+// Search Table Handler
 function searchTable() {
     const query = document.getElementById("table-search-input").value.toLowerCase();
-    const filtered = sampleCustomers.filter(c => 
+    const searched = currentFilteredData.filter(c => 
         c.id.toLowerCase().includes(query) || 
         c.contract.toLowerCase().includes(query) ||
-        c.internet.toLowerCase().includes(query)
+        c.internet.toLowerCase().includes(query) ||
+        c.payment.toLowerCase().includes(query)
     );
-    populateTable(filtered);
+    populateTable(searched.slice(0, 25));
 }
 
-// Quick Load from Table to Form
+// Load Customer to Form
 function loadCustomerToCalc(id) {
-    const cust = sampleCustomers.find(c => c.id === id);
+    const cust = currentDataset.find(c => c.id === id);
     if (cust) {
         document.getElementById("input-customer-id").value = cust.id;
         document.getElementById("input-tenure").value = cust.tenure;
@@ -225,46 +317,17 @@ function loadCustomerToCalc(id) {
         document.getElementById("input-contract").value = cust.contract;
         document.getElementById("input-internet").value = cust.internet;
         document.getElementById("input-payment").value = cust.payment;
+        document.getElementById("input-tech-support").value = cust.techSupport === "Yes" ? "Yes" : "No";
         
-        document.getElementById("calculator").scrollIntoView({ behavior: "smooth" });
+        scrollToCalculator();
     }
 }
 
-// Scroll Helper
 function scrollToCalculator() {
     document.getElementById("calculator").scrollIntoView({ behavior: "smooth" });
 }
 
-// Apply Global Filters
-function applyFilters() {
-    const contract = document.getElementById("filter-contract").value;
-    const payment = document.getElementById("filter-payment").value;
-    const internet = document.getElementById("filter-internet").value;
-    const risk = document.getElementById("filter-risk").value;
-
-    let filteredList = [...sampleCustomers];
-
-    if (contract !== "All") filteredList = filteredList.filter(c => c.contract === contract);
-    if (payment !== "All") filteredList = filteredList.filter(c => c.payment === payment);
-    if (internet !== "All") filteredList = filteredList.filter(c => c.internet === internet);
-    if (risk !== "All") {
-        if (risk === "High Risk") filteredList = filteredList.filter(c => c.risk >= 0.70);
-        else if (risk === "Medium Risk") filteredList = filteredList.filter(c => c.risk >= 0.40 && c.risk < 0.70);
-        else if (risk === "Low Risk") filteredList = filteredList.filter(c => c.risk < 0.40);
-    }
-
-    populateTable(filteredList);
-}
-
-function resetFilters() {
-    document.getElementById("filter-contract").value = "All";
-    document.getElementById("filter-payment").value = "All";
-    document.getElementById("filter-internet").value = "All";
-    document.getElementById("filter-risk").value = "All";
-    populateTable(sampleCustomers);
-}
-
-// Form Submit Handler (Live REST API Call or Local ML Fallback)
+// Form Submit Handler for API / Local Scoring
 async function handleFormSubmit(e) {
     e.preventDefault();
 
@@ -311,14 +374,12 @@ async function handleFormSubmit(e) {
             return;
         }
     } catch (err) {
-        console.warn("API offline, utilizing local ML inference engine.");
+        console.warn("FastAPI service offline, falling back to local JS inference engine.");
     }
 
-    // Local ML Simulation Engine Fallback
     runLocalInferenceFallback(payload);
 }
 
-// Render Results to UI
 function renderResults(churnData, ltvData) {
     const probPct = (churnData.churn_probability * 100).toFixed(1) + "%";
     document.getElementById("res-prob-pct").innerText = probPct;
@@ -342,9 +403,8 @@ function renderResults(churnData, ltvData) {
     document.getElementById("res-recommendation-text").innerText = churnData.retention_recommendation;
 }
 
-// Local Fallback Simulation
 function runLocalInferenceFallback(p) {
-    let prob = 0.20;
+    let prob = 0.15;
 
     if (p.Contract === "Month-to-month") prob += 0.35;
     if (p.tenure <= 12) prob += 0.20;
@@ -362,9 +422,9 @@ function runLocalInferenceFallback(p) {
     const predLtv = p.MonthlyCharges * (p.tenure + remainingMonths);
 
     const drivers = [];
-    if (p.Contract === "Month-to-month") drivers.push("Month-to-Month Contract (High Risk)");
-    if (p.tenure <= 12) drivers.push("Early Tenure Lifecycle (<= 12 Months)");
-    if (p.InternetService === "Fiber optic" && p.TechSupport === "No") drivers.push("Fiber Optic without Technical Support");
+    if (p.Contract === "Month-to-month") drivers.push("Month-to-Month Contract Status (High Vulnerability)");
+    if (p.tenure <= 12) drivers.push("Early Lifecycle Tenure (<= 12 Months)");
+    if (p.InternetService === "Fiber optic" && p.TechSupport === "No") drivers.push("Fiber Optic without Technical Support Add-on");
 
     let rec = "No immediate intervention required.";
     if (riskTier === "High Risk") rec = "Offer 15% discount for 1-Year Contract switch + Free Tech Support.";
