@@ -1,6 +1,7 @@
 """
 Exploratory Data Analysis (EDA) Module.
-Generates statistical summaries, univariate & bivariate analysis, correlation matrices, 
+Generates comprehensive statistical summaries, univariate & bivariate analysis, 
+multivariate cross-tabulations, kernel density estimations, correlation matrices,
 and exports high-resolution visual plots to reports/figures/.
 """
 
@@ -20,7 +21,7 @@ plt.rcParams["axes.linewidth"] = 0.8
 
 def generate_eda_reports(df: pd.DataFrame, output_dir: Path = FIGURES_DIR) -> dict:
     """
-    Performs comprehensive EDA and exports publication-ready visual figures.
+    Performs comprehensive EDA and exports 10+ publication-ready visual figures.
     
     Parameters:
         df (pd.DataFrame): Cleaned customer DataFrame.
@@ -32,14 +33,15 @@ def generate_eda_reports(df: pd.DataFrame, output_dir: Path = FIGURES_DIR) -> di
     logger.info("Generating EDA visual reports...")
     output_dir.mkdir(parents=True, exist_ok=True)
     
+    colors = ["#2b5c8f", "#d9534f"]
+
     # 1. Statistical Summary
     num_summary = df[["tenure", "MonthlyCharges", "TotalCharges"]].describe()
     logger.info("Numerical Summary Computed.")
 
-    # 2. Plot Target Distribution (Churn Rate)
+    # 2. Target Distribution (Churn Rate)
     fig, ax = plt.subplots(figsize=(6, 5))
     churn_counts = df["Churn"].value_counts()
-    colors = ["#2b5c8f", "#d9534f"]
     bars = ax.bar(churn_counts.index, churn_counts.values, color=colors, width=0.5)
     ax.set_title("Overall Customer Churn Distribution", fontsize=14, fontweight="bold", pad=12)
     ax.set_xlabel("Churn Status", fontsize=12)
@@ -57,7 +59,7 @@ def generate_eda_reports(df: pd.DataFrame, output_dir: Path = FIGURES_DIR) -> di
     plt.savefig(output_dir / "01_churn_distribution.png", dpi=300)
     plt.close()
 
-    # 3. Bivariate Analysis: Churn by Contract Type
+    # 3. Churn by Contract Type
     fig, ax = plt.subplots(figsize=(8, 5))
     contract_churn = pd.crosstab(df["Contract"], df["Churn"], normalize="index") * 100
     contract_churn.plot(kind="bar", stacked=False, color=colors, ax=ax, width=0.6)
@@ -78,7 +80,7 @@ def generate_eda_reports(df: pd.DataFrame, output_dir: Path = FIGURES_DIR) -> di
     plt.savefig(output_dir / "02_churn_by_contract.png", dpi=300)
     plt.close()
 
-    # 4. Numerical Distribution: Tenure & Monthly Charges KDE by Churn
+    # 4. Tenure & Monthly Charges KDE by Churn
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
     
     sns.kdeplot(data=df, x="tenure", hue="Churn", palette=colors, fill=True, common_norm=False, ax=axes[0])
@@ -93,7 +95,7 @@ def generate_eda_reports(df: pd.DataFrame, output_dir: Path = FIGURES_DIR) -> di
     plt.savefig(output_dir / "03_tenure_monthlycharges_kde.png", dpi=300)
     plt.close()
 
-    # 5. Correlation Analysis for Encoded Features
+    # 5. Feature Correlation Heatmap
     df_encoded = df.copy()
     for col in df_encoded.select_dtypes(include=["object"]).columns:
         if col != "customerID":
@@ -109,7 +111,93 @@ def generate_eda_reports(df: pd.DataFrame, output_dir: Path = FIGURES_DIR) -> di
     plt.savefig(output_dir / "04_correlation_heatmap.png", dpi=300)
     plt.close()
 
-    logger.info(f"All EDA figures successfully saved to {output_dir}")
+    # 6. Senior Citizen & Dependents Churn Risk (Demographic Analysis)
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    
+    senior_churn = pd.crosstab(df["SeniorCitizen"].map({0: "Non-Senior", 1: "Senior Citizen"}), df["Churn"], normalize="index") * 100
+    senior_churn.plot(kind="bar", color=colors, ax=axes[0], width=0.5)
+    axes[0].set_title("Churn Rate by Senior Citizen Status", fontsize=13, fontweight="bold")
+    axes[0].set_ylabel("Percentage (%)")
+    axes[0].set_xlabel("")
+    plt.setp(axes[0].get_xticklabels(), rotation=0)
+
+    dep_churn = pd.crosstab(df["Dependents"], df["Churn"], normalize="index") * 100
+    dep_churn.plot(kind="bar", color=colors, ax=axes[1], width=0.5)
+    axes[1].set_title("Churn Rate by Dependents Status", fontsize=13, fontweight="bold")
+    axes[1].set_ylabel("Percentage (%)")
+    axes[1].set_xlabel("")
+    plt.setp(axes[1].get_xticklabels(), rotation=0)
+
+    plt.tight_layout()
+    plt.savefig(output_dir / "08_senior_dependents_churn.png", dpi=300)
+    plt.close()
+
+    # 7. Total Charges vs Tenure Scatter Plot (Accumulated Revenue vs Churn Boundary)
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.scatterplot(
+        data=df, x="tenure", y="TotalCharges", hue="Churn",
+        palette=colors, alpha=0.6, s=30, ax=ax
+    )
+    ax.set_title("Total Charges vs Tenure Duration by Churn Status", fontsize=14, fontweight="bold")
+    ax.set_xlabel("Tenure (Months)", fontsize=12)
+    ax.set_ylabel("Total Charges ($)", fontsize=12)
+    plt.tight_layout()
+    plt.savefig(output_dir / "09_totalcharges_tenure_scatter.png", dpi=300)
+    plt.close()
+
+    # 8. Active Service Count vs Churn Rate (Multi-Product Adoption)
+    service_cols = [
+        "PhoneService", "MultipleLines", "OnlineSecurity", "OnlineBackup",
+        "DeviceProtection", "TechSupport", "StreamingTV", "StreamingMovies"
+    ]
+    df["TotalServicesCount"] = df.apply(
+        lambda row: sum([1 for col in service_cols if str(row[col]) == "Yes"]) + (1 if row["InternetService"] in ["DSL", "Fiber optic"] else 0),
+        axis=1
+    )
+    
+    fig, ax = plt.subplots(figsize=(9, 5))
+    service_churn = df.groupby("TotalServicesCount")["ChurnBinary"].mean() * 100
+    bars = ax.bar(service_churn.index, service_churn.values, color="#6366f1", width=0.6)
+    ax.set_title("Churn Rate (%) vs Active Subscribed Services Count", fontsize=14, fontweight="bold", pad=12)
+    ax.set_xlabel("Total Subscribed Services Count (0 to 8)", fontsize=12)
+    ax.set_ylabel("Churn Rate (%)", fontsize=12)
+    
+    for bar in bars:
+        height = bar.get_height()
+        ax.annotate(f"{height:.1f}%",
+                    xy=(bar.get_x() + bar.get_width() / 2, height),
+                    xytext=(0, 3), textcoords="offset points",
+                    ha="center", va="bottom", fontsize=10, fontweight="bold")
+
+    plt.tight_layout()
+    plt.savefig(output_dir / "10_services_count_churn.png", dpi=300)
+    plt.close()
+
+    # 9. Paperless Billing & Payment Method Cross-Tabulation
+    fig, ax = plt.subplots(figsize=(10, 5))
+    pb_pm_churn = pd.crosstab([df["PaperlessBilling"], df["PaymentMethod"]], df["Churn"], normalize="index")["Yes"] * 100
+    pb_pm_churn.plot(kind="barh", color="#d9534f", ax=ax)
+    ax.set_title("Churn Rate (%) across Billing & Payment Method Combinations", fontsize=14, fontweight="bold")
+    ax.set_xlabel("Churn Rate (%)", fontsize=12)
+    ax.set_ylabel("Paperless Billing, Payment Method", fontsize=11)
+    plt.tight_layout()
+    plt.savefig(output_dir / "11_paperless_billing_churn.png", dpi=300)
+    plt.close()
+
+    # 10. Monthly Charges Distribution Boxplot by Internet Technology
+    fig, ax = plt.subplots(figsize=(10, 6))
+    sns.boxplot(
+        data=df, x="InternetService", y="MonthlyCharges", hue="Churn",
+        palette=colors, ax=ax
+    )
+    ax.set_title("Monthly Charges ($) Distribution by Internet Technology & Churn", fontsize=14, fontweight="bold")
+    ax.set_xlabel("Internet Service Type", fontsize=12)
+    ax.set_ylabel("Monthly Charges ($)", fontsize=12)
+    plt.tight_layout()
+    plt.savefig(output_dir / "12_monthlycharges_internet_boxplot.png", dpi=300)
+    plt.close()
+
+    logger.info(f"All 10+ EDA figures successfully saved to {output_dir}")
     return {
         "churn_rate": (df["Churn"] == "Yes").mean(),
         "summary": num_summary.to_dict()

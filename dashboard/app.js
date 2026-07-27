@@ -150,6 +150,62 @@ function initCharts() {
             }
         }
     });
+
+    // 5. Multi-Product Services Count Adoption (Bar Chart)
+    const ctx5 = document.getElementById("chartServicesCount").getContext("2d");
+    charts.services = new Chart(ctx5, {
+        type: "bar",
+        data: {
+            labels: ["$0-$35/mo", "$35-$60/mo", "$60-$80/mo", "$80-$95/mo", "$95+/mo"],
+            datasets: [{
+                label: "Churn Rate (%)",
+                data: [0, 0, 0, 0, 0],
+                backgroundColor: "#6366f1",
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { grid: { display: false } },
+                y: { grid: { color: "rgba(255, 255, 255, 0.05)" }, ticks: { callback: (v) => v + "%" } }
+            }
+        }
+    });
+
+    // 6. Senior Citizen & Household Risk (Grouped Bar Chart)
+    const ctx6 = document.getElementById("chartDemographics").getContext("2d");
+    charts.demographics = new Chart(ctx6, {
+        type: "bar",
+        data: {
+            labels: ["Non-Senior", "Senior Citizen"],
+            datasets: [
+                {
+                    label: "Early Tenure (<= 24m)",
+                    data: [0, 0],
+                    backgroundColor: "#ef4444",
+                    borderRadius: 6
+                },
+                {
+                    label: "Mature Tenure (> 24m)",
+                    data: [0, 0],
+                    backgroundColor: "#10b981",
+                    borderRadius: 6
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: "bottom", labels: { boxWidth: 12 } } },
+            scales: {
+                x: { grid: { display: false } },
+                y: { grid: { color: "rgba(255, 255, 255, 0.05)" }, ticks: { callback: (v) => v + "%" } }
+            }
+        }
+    });
 }
 
 // Global Filter Handler
@@ -254,6 +310,28 @@ function updateCharts(data) {
         charts.techSupport.data.datasets[0].data = [foNoTech, dslNoTech];
         charts.techSupport.data.datasets[1].data = [foWithTech, dslWithTech];
         charts.techSupport.update();
+    }
+
+    // 5. Monthly Billing Tier Impact
+    const s1 = calcRate(data.filter(c => c.monthly < 35));
+    const s2 = calcRate(data.filter(c => c.monthly >= 35 && c.monthly < 60));
+    const s3 = calcRate(data.filter(c => c.monthly >= 60 && c.monthly < 80));
+    const s4 = calcRate(data.filter(c => c.monthly >= 80 && c.monthly < 95));
+    const s5 = calcRate(data.filter(c => c.monthly >= 95));
+    if (charts.services) {
+        charts.services.data.datasets[0].data = [s1, s2, s3, s4, s5];
+        charts.services.update();
+    }
+
+    // 6. Senior Citizen & Tenure Risk
+    const nonSeniorEarly = calcRate(data.filter(c => c.senior === 0 && c.tenure <= 24));
+    const nonSeniorMature = calcRate(data.filter(c => c.senior === 0 && c.tenure > 24));
+    const seniorEarly = calcRate(data.filter(c => c.senior === 1 && c.tenure <= 24));
+    const seniorMature = calcRate(data.filter(c => c.senior === 1 && c.tenure > 24));
+    if (charts.demographics) {
+        charts.demographics.data.datasets[0].data = [nonSeniorEarly, seniorEarly];
+        charts.demographics.data.datasets[1].data = [nonSeniorMature, seniorMature];
+        charts.demographics.update();
     }
 }
 

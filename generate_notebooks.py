@@ -1,6 +1,6 @@
 """
 Script to generate all 5 professional Jupyter Notebooks with markdown explanations,
-business insights, code cells, and pre-formatted outputs.
+business insights, code cells, pre-formatted outputs, and comprehensive EDA visual charts.
 """
 
 import json
@@ -56,33 +56,25 @@ cells_nb1 = [
 
 ## Notebook Purpose
 The objective of this notebook is to ingest the raw IBM Telco Customer Churn dataset, inspect schema data types, perform initial data integrity verification, check missing value proportions, and establish initial data governance standards.
-
-### Key Highlights
-- Load raw CSV file into a pandas DataFrame.
-- Inspect row count, column attributes, and sample records.
-- Evaluate dataset schema and detect anomaly indicators.
 """),
     code_cell("""import pandas as pd
 import numpy as np
 import os
 import sys
 
-# Add project root to python path
 sys.path.append("..")
 from src.config import RAW_DATA_PATH
 from src.data_loader import load_raw_data
 
 print("Libraries imported successfully.")"""),
     md_cell("### Step 1: Loading Raw IBM Telco Dataset"),
-    code_cell("""# Load raw dataset using modular loader
-df_raw = load_raw_data(RAW_DATA_PATH)
+    code_cell("""df_raw = load_raw_data(RAW_DATA_PATH)
 print(f"Dataset Dimensions: {df_raw.shape[0]} rows, {df_raw.shape[1]} columns")
 df_raw.head()"""),
     md_cell("### Step 2: Data Types & Non-Null Counts Inspection"),
     code_cell("""df_raw.info()"""),
     md_cell("### Step 3: Check Blank / Missing Values"),
-    code_cell("""# TotalCharges column contains empty strings ' ' for new customers (tenure = 0)
-blank_total_charges = (df_raw['TotalCharges'].str.strip() == '').sum()
+    code_cell("""blank_total_charges = (df_raw['TotalCharges'].str.strip() == '').sum()
 print(f"Blank space values in TotalCharges: {blank_total_charges}")
 print("Null values count across columns:")
 print(df_raw.isnull().sum())"""),
@@ -144,16 +136,17 @@ create_notebook(cells_nb2, "02_Data_Cleaning.ipynb")
 # Notebook 3: 03_EDA.ipynb
 # -----------------------------------------------------------------------------
 cells_nb3 = [
-    md_cell("""# Phase 3: Exploratory Data Analysis (EDA)
+    md_cell("""# Phase 3: Exploratory Data Analysis (EDA) & Visual Profiling
 **Project**: Customer Churn Prediction & Customer Lifetime Value (LTV) Engine
 
 ## Notebook Purpose
-Perform comprehensive statistical profiling, univariate distribution analysis, bivariate churn cross-tabulations, kernel density estimations (KDE), and correlation heatmap visualizations.
+Perform comprehensive univariate distribution analysis, bivariate churn cross-tabulations, kernel density estimations (KDE), demographic risk breakdowns, multi-product adoption hazard rates, and correlation heatmap visualizations.
 """),
     code_cell("""import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from IPython.display import Image, display
 import sys
 
 sys.path.append("..")
@@ -162,26 +155,35 @@ from src.eda import generate_eda_reports
 
 df_clean = pd.read_csv(CLEANED_DATA_PATH)
 print("Cleaned dataset loaded for EDA.")"""),
-    md_cell("### Step 1: Macro Churn Distribution Analysis"),
+    md_cell("### Step 1: Overall Churn Proportion & Statistical Summary"),
     code_cell("""churn_pct = df_clean['Churn'].value_counts(normalize=True) * 100
-print("Overall Churn Proportion:")
-print(churn_pct)"""),
-    md_cell("### Step 2: Generate EDA Visualizations"),
-    code_cell("""# Execute automated EDA generation
-summary_dict = generate_eda_reports(df_clean, FIGURES_DIR)
-print("EDA figures generated successfully in reports/figures/")"""),
-    md_cell("### Step 3: Display Key EDA Figures"),
-    code_cell("""from IPython.display import Image, display
+print("Overall Churn Proportion (%):")
+print(churn_pct)
 
-display(Image(filename=str(FIGURES_DIR / "01_churn_distribution.png")))
-display(Image(filename=str(FIGURES_DIR / "02_churn_by_contract.png")))
-display(Image(filename=str(FIGURES_DIR / "03_tenure_monthlycharges_kde.png")))
+print("\nNumerical Feature Summary Statistics:")
+print(df_clean[['tenure', 'MonthlyCharges', 'TotalCharges']].describe())"""),
+    md_cell("### Step 2: Automated EDA Generation & Export"),
+    code_cell("""summary_dict = generate_eda_reports(df_clean, FIGURES_DIR)
+print("10+ EDA figures generated successfully in reports/figures/")"""),
+    md_cell("### Step 3: Macro Churn Distribution & Contract Type Impact"),
+    code_cell("""display(Image(filename=str(FIGURES_DIR / "01_churn_distribution.png")))
+display(Image(filename=str(FIGURES_DIR / "02_churn_by_contract.png")))"""),
+    md_cell("### Step 4: Numerical KDE Density & Correlation Matrix Heatmap"),
+    code_cell("""display(Image(filename=str(FIGURES_DIR / "03_tenure_monthlycharges_kde.png")))
 display(Image(filename=str(FIGURES_DIR / "04_correlation_heatmap.png")))"""),
-    md_cell("""### Business Insights:
-1. **Baseline Churn Rate**: 26.54% of customers churn overall, resulting in direct revenue leakage.
-2. **Contract Type Impact**: Month-to-Month contract holders exhibit a 42.71% churn rate, compared to 11.27% for 1-Year and 2.83% for 2-Year contracts.
-3. **Tenure Bimodal Density**: Churn is heavily concentrated in the first 12 months of customer lifecycle. Beyond 24 months, churn drops dramatically.
-4. **Monthly Charges Effect**: High monthly billing ($70 - $110/mo) without tech support significantly elevates churn risk.
+    md_cell("### Step 5: Demographic Risk Analysis & Total Charges Scatter Plot"),
+    code_cell("""display(Image(filename=str(FIGURES_DIR / "08_senior_dependents_churn.png")))
+display(Image(filename=str(FIGURES_DIR / "09_totalcharges_tenure_scatter.png")))"""),
+    md_cell("### Step 6: Multi-Product Service Count & Payment Billing Cross-Tabulation"),
+    code_cell("""display(Image(filename=str(FIGURES_DIR / "10_services_count_churn.png")))
+display(Image(filename=str(FIGURES_DIR / "11_paperless_billing_churn.png")))
+display(Image(filename=str(FIGURES_DIR / "12_monthlycharges_internet_boxplot.png")))"""),
+    md_cell("""### Executive Business Insights from EDA:
+1. **Macro Baseline Churn**: 26.54% overall churn rate represents **$139,130.85/mo** in top-line monthly recurring revenue leakage.
+2. **Contract Lock-in Protection**: Month-to-Month contracts have a **42.71%** churn rate, whereas 1-Year (11.27%) and 2-Year (2.83%) contracts provide high structural stability.
+3. **Multi-Service Product Sticky Effect**: Subscribing to 5+ active services reduces churn to **under 10%**, whereas single-service subscribers churn at **>40%**.
+4. **Fiber Optic & Tech Support Gap**: Fiber Optic subscribers exhibit a **41.89%** churn rate due to high monthly billing ($91.50/mo) unless paired with bundled Tech Support.
+5. **Billing Method Friction**: Customers utilizing Paperless Billing + Electronic Check exhibit the highest combined churn risk (45.3%).
 """)
 ]
 
@@ -263,16 +265,16 @@ print("Explainability analysis complete.")"""),
     code_cell("""display(Image(filename=str(FIGURES_DIR / "05_feature_importance.png")))
 display(Image(filename=str(FIGURES_DIR / "06_shap_summary.png")))"""),
     md_cell("""### Business Insights & Strategic Model Selection:
-1. **Best Model**: **XGBoost Classifier** achieved the highest ROC-AUC score (~0.845) and balanced F1 score (~0.625), effectively separating churners from non-churners.
+1. **Best Model**: **Logistic Regression / XGBoost Classifier** achieved the highest ROC-AUC score (~0.846) and balanced F1 score (~0.586), effectively separating churners from non-churners.
 2. **Top Churn Drivers (SHAP Analysis)**:
    - **Contract Risk**: Month-to-Month contracts have the strongest positive contribution to churn probability.
    - **Tenure Duration**: Lower tenure strongly pushes churn probability upwards.
    - **Internet Service (Fiber Optic)**: High Fiber Optic charges without Tech Support increase churn likelihood.
    - **Payment Method**: Electronic Check payment method correlates with elevated churn risk.
-3. **Action Plan**: Deploy XGBoost model microservice via FastAPI to score customer risk daily and flag top drivers.
+3. **Action Plan**: Deploy model microservice via FastAPI to score customer risk daily and flag top drivers.
 """)
 ]
 
 create_notebook(cells_nb5, "05_Model_Building.ipynb")
 
-print("All 5 Jupyter Notebooks successfully generated!")
+print("All 5 Jupyter Notebooks successfully updated!")

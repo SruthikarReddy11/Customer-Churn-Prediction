@@ -1,18 +1,18 @@
 {
     "Logistic Regression": {
-        "Accuracy": 0.8034,
-        "Precision": 0.6644,
-        "Recall": 0.5241,
-        "F1 Score": 0.5859,
-        "ROC-AUC": 0.846,
+        "Accuracy": 0.8048,
+        "Precision": 0.6667,
+        "Recall": 0.5294,
+        "F1 Score": 0.5902,
+        "ROC-AUC": 0.8459,
         "Confusion Matrix": [
             [
                 936,
                 99
             ],
             [
-                178,
-                196
+                176,
+                198
             ]
         ]
     },
@@ -34,19 +34,19 @@
         ]
     },
     "Random Forest": {
-        "Accuracy": 0.8034,
-        "Precision": 0.6667,
-        "Recall": 0.5187,
-        "F1 Score": 0.5835,
-        "ROC-AUC": 0.8442,
+        "Accuracy": 0.7984,
+        "Precision": 0.6562,
+        "Recall": 0.5053,
+        "F1 Score": 0.571,
+        "ROC-AUC": 0.8443,
         "Confusion Matrix": [
             [
-                938,
-                97
+                936,
+                99
             ],
             [
-                180,
-                194
+                185,
+                189
             ]
         ]
     },
