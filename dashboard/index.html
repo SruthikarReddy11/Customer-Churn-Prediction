@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Disable Caching -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Sales Performance Dashboard</title>
+    <!-- Google Fonts: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- Local JS Libraries -->
+    <script src="chart.js"></script>
+    <script src="papaparse.js"></script>
+</head>
+<body>
+    <!-- App Container -->
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fa-solid fa-chart-line logo-icon"></i>
+                    <span>Antigravity <span class="logo-sub">Sales</span></span>
+                </div>
+            </div>
+            
+            <div class="filter-section">
+                <h3><i class="fa-solid fa-filter"></i> Filters</h3>
+                
+                <div class="filter-group">
+                    <label for="filter-year">Year</label>
+                    <select id="filter-year">
+                        <option value="all">All Years</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="filter-region">Region</label>
+                    <select id="filter-region">
+                        <option value="all">All Regions</option>
+                        <option value="West">West</option>
+                        <option value="East">East</option>
+                        <option value="Central">Central</option>
+                        <option value="South">South</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="filter-segment">Segment</label>
+                    <select id="filter-segment">
+                        <option value="all">All Segments</option>
+                        <option value="Consumer">Consumer</option>
+                        <option value="Corporate">Corporate</option>
+                        <option value="Home Office">Home Office</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="filter-category">Category</label>
+                    <select id="filter-category">
+                        <option value="all">All Categories</option>
+                        <option value="Furniture">Furniture</option>
+                        <option value="Office Supplies">Office Supplies</option>
+                        <option value="Technology">Technology</option>
+                    </select>
+                </div>
+                
+                <button id="reset-filters" class="btn-reset">
+                    <i class="fa-solid fa-arrow-rotate-left"></i> Reset Filters
+                </button>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="theme-toggle-container">
+                    <span>Theme</span>
+                    <button id="theme-toggle" class="btn-theme-toggle">
+                        <i class="fa-solid fa-moon moon-icon"></i>
+                        <i class="fa-solid fa-sun sun-icon"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="main-header">
+                <div class="header-title-container">
+                    <h1>Sales Performance Dashboard</h1>
+                    <p class="subtitle">Real-time business performance metrics and sales intelligence</p>
+                </div>
+                
+                <div class="header-meta">
+                    <div class="meta-card">
+                        <span class="meta-label">Total Records</span>
+                        <span id="record-count" class="meta-value">Loading...</span>
+                    </div>
+                    <div class="meta-card">
+                        <span class="meta-label">Data Status</span>
+                        <span class="meta-value status-active">
+                            <span class="pulse-dot"></span> Active
+                        </span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Loading overlay -->
+            <div id="loading-overlay" class="loading-overlay">
+                <div class="loader"></div>
+                <p>Loading 50,000+ sales records...</p>
+            </div>
+
+            <!-- KPI Cards Grid -->
+            <section class="kpis-grid">
+                <div class="kpi-card sales-kpi">
+                    <div class="kpi-icon"><i class="fa-solid fa-wallet"></i></div>
+                    <div class="kpi-info">
+                        <span class="kpi-title">Total Sales</span>
+                        <span id="kpi-sales" class="kpi-value">$0.00</span>
+                    </div>
+                </div>
+                
+                <div class="kpi-card profit-kpi">
+                    <div class="kpi-icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                    <div class="kpi-info">
+                        <span class="kpi-title">Total Profit</span>
+                        <span id="kpi-profit" class="kpi-value">$0.00</span>
+                    </div>
+                </div>
+                
+                <div class="kpi-card margin-kpi">
+                    <div class="kpi-icon"><i class="fa-solid fa-percent"></i></div>
+                    <div class="kpi-info">
+                        <span class="kpi-title">Profit Margin</span>
+                        <span id="kpi-margin" class="kpi-value">0.00%</span>
+                    </div>
+                </div>
+                
+                <div class="kpi-card orders-kpi">
+                    <div class="kpi-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+                    <div class="kpi-info">
+                        <span class="kpi-title">Total Orders</span>
+                        <span id="kpi-orders" class="kpi-value">0</span>
+                    </div>
+                </div>
+                
+                <div class="kpi-card customers-kpi">
+                    <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
+                    <div class="kpi-info">
+                        <span class="kpi-title">Customers</span>
+                        <span id="kpi-customers" class="kpi-value">0</span>
+                    </div>
+                </div>
+                
+                <div class="kpi-card aov-kpi">
+                    <div class="kpi-icon"><i class="fa-solid fa-bag-shopping"></i></div>
+                    <div class="kpi-info">
+                        <span class="kpi-title">Avg Order Value</span>
+                        <span id="kpi-aov" class="kpi-value">$0.00</span>
+                    </div>
+                </div>
+                
+                <div class="kpi-card quantity-kpi">
+                    <div class="kpi-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+                    <div class="kpi-info">
+                        <span class="kpi-title">Units Sold</span>
+                        <span id="kpi-quantity" class="kpi-value">0</span>
+                    </div>
+                </div>
+                
+                <div class="kpi-card discount-kpi">
+                    <div class="kpi-icon"><i class="fa-solid fa-tags"></i></div>
+                    <div class="kpi-info">
+                        <span class="kpi-title">Avg Discount</span>
+                        <span id="kpi-discount" class="kpi-value">0.00%</span>
+                    </div>
+                </div>
+                
+                <div class="kpi-card delay-kpi">
+                    <div class="kpi-icon"><i class="fa-solid fa-truck-fast"></i></div>
+                    <div class="kpi-info">
+                        <span class="kpi-title">Avg Ship Delay</span>
+                        <span id="kpi-delay" class="kpi-value">0.0 days</span>
+                    </div>
+                </div>
+                
+                <div class="kpi-card best-region-kpi">
+                    <div class="kpi-icon"><i class="fa-solid fa-map-location-dot"></i></div>
+                    <div class="kpi-info">
+                        <span class="kpi-title">Top Region</span>
+                        <span id="kpi-best-region" class="kpi-value">-</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Dashboard Charts & Insights Section -->
+            <div class="dashboard-grid">
+                <!-- Main Sales & Profit Trend (Large) -->
+                <div class="grid-card col-span-2">
+                    <div class="card-header">
+                        <h2>Sales & Profit Trends Over Time</h2>
+                        <span class="chart-subtitle">Monthly transaction volume and net profitability</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chart-trends"></canvas>
+                    </div>
+                </div>
+
+                <!-- AI Insights Panel -->
+                <div class="grid-card ai-insights-card">
+                    <div class="card-header">
+                        <h2><i class="fa-solid fa-wand-magic-sparkles"></i> Automated Insights</h2>
+                        <span class="chart-subtitle">Dynamically computed from filtered data</span>
+                    </div>
+                    <div id="ai-insights-content" class="insights-list">
+                        <!-- Filled by JS -->
+                        <div class="insight-item loading-insight">
+                            <i class="fa-solid fa-spinner fa-spin"></i> Generating insights...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Regional Sales vs Profit -->
+                <div class="grid-card">
+                    <div class="card-header">
+                        <h2>Regional Performance</h2>
+                        <span class="chart-subtitle">Sales and profit comparisons across regions</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chart-regions"></canvas>
+                    </div>
+                </div>
+
+                <!-- Customer Segment Sales -->
+                <div class="grid-card">
+                    <div class="card-header">
+                        <h2>Sales by Customer Segment</h2>
+                        <span class="chart-subtitle">Revenue distribution by customer class</span>
+                    </div>
+                    <div class="chart-container doughnut-container">
+                        <canvas id="chart-segments"></canvas>
+                    </div>
+                </div>
+
+                <!-- Product Category & Sub-Category Sales -->
+                <div class="grid-card">
+                    <div class="card-header">
+                        <h2>Product Category Revenue</h2>
+                        <span class="chart-subtitle">Sales contribution by category & sub-category</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chart-categories"></canvas>
+                    </div>
+                </div>
+
+                <!-- Top Products -->
+                <div class="grid-card col-span-2">
+                    <div class="card-header">
+                        <h2>Top 10 Best-Selling Products</h2>
+                        <span class="chart-subtitle">Highest revenue-generating inventory items</span>
+                    </div>
+                    <div class="chart-container horizontal-container">
+                        <canvas id="chart-products"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Table Explorer Section -->
+            <section class="explorer-card">
+                <div class="explorer-header">
+                    <div class="explorer-title">
+                        <h2>Transaction Explorer</h2>
+                        <span class="chart-subtitle">Browse and filter individual transaction details</span>
+                    </div>
+                    <div class="explorer-actions">
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="table-search" placeholder="Search orders, customers, products...">
+                        </div>
+                        <button id="btn-export" class="btn-export">
+                            <i class="fa-solid fa-download"></i> Export CSV
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="sales-table">
+                        <thead>
+                            <tr>
+                                <th>Row ID</th>
+                                <th>Order ID</th>
+                                <th>Order Date</th>
+                                <th>Customer Name</th>
+                                <th>Segment</th>
+                                <th>Region</th>
+                                <th>Category</th>
+                                <th>Product Name</th>
+                                <th>Sales</th>
+                                <th>Profit</th>
+                                <th>Margin</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <!-- Populated by JS -->
+                            <tr>
+                                <td colspan="11" class="text-center">Loading transactions...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        Showing <span id="page-start">0</span> to <span id="page-end">0</span> of <span id="total-filtered">0</span> entries
+                    </div>
+                    <div class="pagination-controls" id="pagination-buttons">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Custom JS -->
+    <script src="app.js?v=1.0.4"></script>
+</body>
+</html>
