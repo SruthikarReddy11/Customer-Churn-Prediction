@@ -8,6 +8,8 @@ and exports high-resolution visual plots to reports/figures/.
 from pathlib import Path
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 from src.config import CLEANED_DATA_PATH, FIGURES_DIR

@@ -55,6 +55,7 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
         return count
 
     df["TotalServices"] = df.apply(count_active_services, axis=1)
+    df["TotalServicesCount"] = df["TotalServices"]
 
     # 3. Contract Risk Score (Month-to-month=3, One year=2, Two year=1)
     contract_risk_map = {"Month-to-month": 3, "One year": 2, "Two year": 1}
