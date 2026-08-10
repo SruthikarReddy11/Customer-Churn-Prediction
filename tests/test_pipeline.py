@@ -140,3 +140,12 @@ def test_api_predict_ltv():
     res = response.json()
     assert res["customer_id"] == "TEST-LTV"
     assert res["predicted_lifetime_value"] >= 1560.0
+
+
+def test_api_analytics_summary():
+    response = client.get("/api/v1/analytics/summary")
+    assert response.status_code == 200
+    res = response.json()
+    assert res["total_customers"] > 0
+    assert "churn_rate_pct" in res
+    assert "total_mrr" in res

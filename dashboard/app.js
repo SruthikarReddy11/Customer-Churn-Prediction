@@ -519,3 +519,32 @@ function runLocalInferenceFallback(p) {
         expected_remaining_months: remainingMonths
     });
 }
+
+// Export Filtered Customer Cohort Report as CSV
+function exportReport() {
+    if (!currentFilteredData || currentFilteredData.length === 0) {
+        alert("No records to export.");
+        return;
+    }
+
+    const headers = ["Customer_ID", "Gender", "Senior_Citizen", "Tenure_Months", "Contract", "Internet_Service", "Tech_Support", "Payment_Method", "Monthly_Charges", "Historical_LTV", "Churn_Status", "Risk_Score"];
+    const csvRows = [headers.join(",")];
+
+    currentFilteredData.forEach(c => {
+        const row = [
+            c.id, c.gender, c.senior, c.tenure,
+            `"${c.contract}"`, `"${c.internet}"`, `"${c.techSupport}"`, `"${c.payment}"`,
+            c.monthly, c.ltv, c.churn, c.risk
+        ];
+        csvRows.push(row.join(","));
+    });
+
+    const csvContent = "data:text/csv;charset=utf-8," + csvRows.join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `churn_analytics_report_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}

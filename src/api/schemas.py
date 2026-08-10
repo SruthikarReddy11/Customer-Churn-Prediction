@@ -77,3 +77,12 @@ class HealthCheckResponse(BaseModel):
     status: str
     version: str
     models_loaded: Dict[str, bool]
+
+class AnalyticsSummaryResponse(BaseModel):
+    total_customers: int
+    churned_customers: int
+    churn_rate_pct: float
+    total_mrr: float
+    at_risk_mrr: float
+    avg_tenure_months: float
+    avg_customer_ltv: float
