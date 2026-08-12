@@ -247,6 +247,25 @@ function resetFilters() {
     applyFilters();
 }
 
+// Apply Quick Filter Presets
+function applyPreset(presetName) {
+    document.getElementById("filter-contract").value = "All";
+    document.getElementById("filter-payment").value = "All";
+    document.getElementById("filter-internet").value = "All";
+    document.getElementById("filter-risk").value = "All";
+    
+    if (presetName === 'highRiskM2M') {
+        document.getElementById("filter-contract").value = "Month-to-month";
+        document.getElementById("filter-risk").value = "High Risk";
+    } else if (presetName === 'fiberNoTech') {
+        document.getElementById("filter-internet").value = "Fiber optic";
+        document.getElementById("filter-risk").value = "High Risk";
+    } else if (presetName === 'echeckManual') {
+        document.getElementById("filter-payment").value = "Electronic check";
+    }
+    applyFilters();
+}
+
 // Update KPI Cards
 function updateKpiCards(data) {
     const total = data.length;

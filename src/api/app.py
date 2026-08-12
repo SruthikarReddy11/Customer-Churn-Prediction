@@ -1,9 +1,10 @@
 """
 Main FastAPI Application Entry Point.
-Configures CORS middleware, exception handlers, and mounts API router.
+Configures CORS middleware, request execution timing, logging, and mounts API router.
 """
 
-from fastapi import FastAPI
+import time
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from src.api.routes import router as api_router
 from src.logger import logger
@@ -26,6 +27,16 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Request Execution Timing & Latency Middleware
+    @app.middleware("http")
+    async def add_process_time_header(request: Request, call_next):
+        start_time = time.time()
+        response = await call_next(request)
+        process_time = (time.time() - start_time) * 1000
+        response.headers["X-Process-Time"] = f"{process_time:.2f}ms"
+        logger.info(f"{request.method} {request.url.path} - {response.status_code} ({process_time:.2f}ms)")
+        return response
 
     # Mount routes
     app.include_router(api_router, prefix="/api/v1")
