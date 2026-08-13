@@ -16,7 +16,17 @@ document.addEventListener("DOMContentLoaded", () => {
     initCharts();
     applyFilters();
     checkApiHealth();
+    updateTimestamp();
 });
+
+function updateTimestamp() {
+    const badge = document.getElementById("live-time-badge");
+    if (badge) {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        badge.innerHTML = `<i class="fa-solid fa-clock"></i> Live (${timeStr})`;
+    }
+}
 
 // Check FastAPI Health
 async function checkApiHealth() {

@@ -72,12 +72,21 @@ def test_model_artifacts_exist():
 
 
 # 4. Test FastAPI API Endpoints
+def test_api_root():
+    response = client.get("/")
+    assert response.status_code == 200
+    res = response.json()
+    assert "message" in res
+    assert "X-Process-Time" in response.headers
+
+
 def test_api_health():
     response = client.get("/api/v1/health")
     assert response.status_code == 200
     json_data = response.json()
     assert json_data["status"] == "healthy"
     assert json_data["models_loaded"]["churn_model"] is True
+    assert "X-Process-Time" in response.headers
 
 
 def test_api_predict_churn():
